@@ -68,26 +68,37 @@ function tp(){var i=document.getElementById("pin");i.type=i.type==="password"?"t
 })();
 function go(){
   var btn=document.getElementById("go"),ok=document.getElementById("ok"),er=document.getElementById("er");
-  btn.disabled=true;btn.textContent="&#x6253;&#x5361;&#x4E2D;...";ok.style.display="none";er.style.display="none";
-  var pin=document.getElementById("pin").value.trim();
-  var body={action:"punch",token:TK,punchType:PT,deviceId:DI};
-  if(DT)body.deviceToken=DT;
-  if(pin)body.pin=pin;
-  fetch(EP,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(d.ok){
-      if(d.deviceToken){localStorage.setItem("ty_dtk",d.deviceToken);DT=d.deviceToken;}
-      ok.textContent=d.msg+"\n"+d.name+"  "+d.time;
-      ok.style.display="block";
-      document.getElementById("pin").value="";
-    }else{
-      er.textContent=d.error||"&#x6253;&#x5361;&#x5931;&#x6557;";
-      er.style.display="block";
-    }
-  })
-  .catch(function(){er.textContent="&#x7DB2;&#x7D61;&#x932F;&#x8AA4;";er.style.display="block";})
-  .finally(function(){btn.disabled=false;btn.textContent="&#x6253;&#x5361;";});
+  btn.disabled=true;ok.style.display="none";er.style.display="none";
+  if(!navigator.geolocation){
+    er.textContent="此設備不支援GPS定位";er.style.display="block";
+    btn.disabled=false;return;
+  }
+  btn.textContent="定位中…";
+  navigator.geolocation.getCurrentPosition(function(pos){
+    btn.textContent="打卡中…";
+    var pin=document.getElementById("pin").value.trim();
+    var body={action:"punch",token:TK,punchType:PT,deviceId:DI,lat:pos.coords.latitude,lng:pos.coords.longitude};
+    if(DT)body.deviceToken=DT;
+    if(pin)body.pin=pin;
+    fetch(EP,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){
+        if(d.deviceToken){localStorage.setItem("ty_dtk",d.deviceToken);DT=d.deviceToken;}
+        ok.textContent=d.msg+"\n"+d.name+"  "+d.time;
+        ok.style.display="block";
+        document.getElementById("pin").value="";
+      }else{
+        er.textContent=d.error||"打卡失敗";
+        er.style.display="block";
+      }
+    })
+    .catch(function(){er.textContent="網絡錯誤";er.style.display="block";})
+    .finally(function(){btn.disabled=false;btn.textContent="打卡";});
+  },function(){
+    er.textContent="無法取得位置，請允許定位權限後重試";er.style.display="block";
+    btn.disabled=false;btn.textContent="打卡";
+  },{timeout:10000,maximumAge:60000});
 }
 </script>
 </body>
