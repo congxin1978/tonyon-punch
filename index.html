@@ -22,6 +22,7 @@ h1{text-align:center;font-size:22px;color:#1a1a2e;margin-bottom:4px}
 .bt:disabled{opacity:.45;cursor:not-allowed}
 .ok{margin-top:16px;padding:14px;border-radius:12px;text-align:center;font-size:16px;font-weight:600;background:#e6ffed;color:#276749;display:none;white-space:pre-line}
 .er{margin-top:16px;padding:14px;border-radius:12px;text-align:center;font-size:16px;font-weight:600;background:#fff5f5;color:#c53030;display:none}
+.warn{margin-top:16px;padding:12px;border-radius:12px;text-align:center;font-size:14px;font-weight:600;background:#fffbeb;color:#92400e;display:none;line-height:1.5}
 </style>
 </head>
 <body>
@@ -43,6 +44,7 @@ h1{text-align:center;font-size:22px;color:#1a1a2e;margin-bottom:4px}
 <button class="bt" id="go" onclick="go()" disabled>&#x6253;&#x5361;</button>
 <div class="ok" id="ok"></div>
 <div class="er" id="er"></div>
+<div class="warn" id="wx">&#x26A0;&#xFE0F; 微信瀏覽器無法使用定位<br>請點右上角「&#x2026;」→「在瀏覽器中開啟」後重新掃碼打卡</div>
 </div>
 <script>
 var EP="https://hphdrpykabgxwhyfgxcj.supabase.co/functions/v1/attend-punch";
@@ -55,6 +57,8 @@ setInterval(clk,1000);clk();
 function upd(){var ok=PT&&(DT||document.getElementById("pin").value.trim());document.getElementById("go").disabled=!ok;}
 function sel(el){document.querySelectorAll(".pb").forEach(function(b){b.classList.remove("sel");});el.classList.add("sel");PT=el.getAttribute("data-t");upd();}
 function tp(){var i=document.getElementById("pin");i.type=i.type==="password"?"text":"password";}
+var IS_WX=/MicroMessenger/i.test(navigator.userAgent);
+if(IS_WX){document.getElementById("wx").style.display="block";}
 (function(){
   if(!TK){document.getElementById("er").textContent="QR code invalid";document.getElementById("er").style.display="block";return;}
   var h=parseInt(new Date().toLocaleString("en",{timeZone:"Australia/Sydney",hour:"2-digit",hour12:false}));
@@ -96,7 +100,8 @@ function go(){
     .catch(function(){er.textContent="網絡錯誤";er.style.display="block";})
     .finally(function(){btn.disabled=false;btn.textContent="打卡";});
   },function(){
-    er.textContent="無法取得位置，請允許定位權限後重試";er.style.display="block";
+    if(IS_WX){document.getElementById("wx").style.display="block";er.style.display="none";}
+    else{er.textContent="無法取得位置，請允許定位權限後重試";er.style.display="block";}
     btn.disabled=false;btn.textContent="打卡";
   },{timeout:10000,maximumAge:60000});
 }
